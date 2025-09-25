@@ -1,0 +1,227 @@
+-- ModuleScript (ReplicatedStorage > UILibrary)
+
+local TweenService = game:GetService("TweenService")
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+local UILibrary = {}
+
+function UILibrary:CreateWindow(titleText)
+    local gui = Instance.new("ScreenGui")
+    gui.Name = "MenuUI"
+    gui.ResetOnSpawn = false
+    gui.Parent = LocalPlayer.PlayerGui
+
+    -- ===== MAIN WINDOW =====
+    local mainFrame = Instance.new("Frame")
+    mainFrame.Name = "MainFrame"
+    mainFrame.Size = UDim2.new(0, 600, 0, 400)
+    mainFrame.Position = UDim2.new(0.5, -300, 0.5, -200)
+    mainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
+    mainFrame.BorderSizePixel = 0
+    mainFrame.Active = true
+    mainFrame.Draggable = true
+    mainFrame.Parent = gui
+
+    -- ===== SIDEBAR =====
+    local sidebar = Instance.new("Frame")
+    sidebar.Name = "Sidebar"
+    sidebar.Size = UDim2.new(0, 150, 1, 0)
+    sidebar.BackgroundColor3 = Color3.fromRGB(28, 28, 35)
+    sidebar.BorderSizePixel = 0
+    sidebar.Parent = mainFrame
+
+    local title = Instance.new("TextLabel")
+    title.Size = UDim2.new(1, 0, 0, 50)
+    title.Text = titleText or "New Window"
+    title.TextColor3 = Color3.fromRGB(255, 255, 255)
+    title.TextSize = 20
+    title.Font = Enum.Font.SourceSansBold
+    title.BackgroundTransparency = 1
+    title.Parent = sidebar
+
+    local tabList = Instance.new("UIListLayout")
+    tabList.Padding = UDim.new(0, 4)
+    tabList.SortOrder = Enum.SortOrder.LayoutOrder
+    tabList.Parent = sidebar
+
+    -- ===== CONTENT AREA =====
+    local contentFrame = Instance.new("Frame")
+    contentFrame.Name = "ContentHolder"
+    contentFrame.Size = UDim2.new(1, -150, 1, 0)
+    contentFrame.Position = UDim2.new(0, 150, 0, 0)
+    contentFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
+    contentFrame.BorderSizePixel = 0
+    contentFrame.Parent = mainFrame
+
+    -- ===== SHOW/HIDE BUTTON =====
+    local toggleBtn = Instance.new("ImageButton")
+    toggleBtn.Name = "ToggleButton"
+    toggleBtn.Size = UDim2.new(0, 40, 0, 40)
+    toggleBtn.Position = UDim2.new(0, -50, 0.5, -20) -- left of window
+    toggleBtn.BackgroundTransparency = 1
+    toggleBtn.Image = "rbxassetid://6031094678" -- you can replace with your image asset
+    toggleBtn.Active = true
+    toggleBtn.Draggable = true
+    toggleBtn.Parent = mainFrame
+
+    local uiVisible = true
+    toggleBtn.MouseButton1Click:Connect(function()
+        uiVisible = not uiVisible
+        mainFrame.Visible = uiVisible
+    end)
+
+    -- ===== WINDOW OBJECT =====
+    local window = {}
+    window._Tabs = {}
+    window._TabButtons = {}
+
+    -- ===== TAB CREATION =====
+    function window:CreateTab(tabName)
+        local tab = {}
+
+        -- Tab button
+        local tabButton = Instance.new("TextButton")
+        tabButton.Size = UDim2.new(1, -10, 0, 30)
+        tabButton.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+        tabButton.Text = tabName
+        tabButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+        tabButton.TextSize = 18
+        tabButton.Font = Enum.Font.SourceSansBold
+        tabButton.BorderSizePixel = 0
+        tabButton.Parent = sidebar
+
+        -- Tab content
+        local tabContent = Instance.new("ScrollingFrame")
+        tabContent.Name = "TabContent_" .. tabName
+        tabContent.Size = UDim2.new(1, -20, 1, -20)
+        tabContent.Position = UDim2.new(0, 10, 0, 10)
+        tabContent.BackgroundTransparency = 1
+        tabContent.Visible = (#window._Tabs == 0)
+        tabContent.ScrollBarThickness = 6
+        tabContent.Parent = contentFrame
+
+        local layout = Instance.new("UIListLayout")
+        layout.Padding = UDim.new(0, 8)
+        layout.FillDirection = Enum.FillDirection.Vertical
+        layout.SortOrder = Enum.SortOrder.LayoutOrder
+        layout.Parent = tabContent
+
+        tab._Content = tabContent
+
+        -- === TOGGLE ===
+        function tab:CreateToggle(labelText, callback)
+            local toggleFrame = Instance.new("Frame")
+            toggleFrame.Size = UDim2.new(1, -20, 0, 32)
+            toggleFrame.BackgroundTransparency = 1
+            toggleFrame.Parent = tabContent
+
+            local label = Instance.new("TextLabel")
+            label.Size = UDim2.new(0.7, 0, 1, 0)
+            label.BackgroundTransparency = 1
+            label.Text = labelText
+            label.TextColor3 = Color3.fromRGB(230, 230, 230)
+            label.TextSize = 18
+            label.Font = Enum.Font.SourceSans
+            label.TextXAlignment = Enum.TextXAlignment.Left
+            label.Parent = toggleFrame
+
+            local toggleBtn = Instance.new("TextButton")
+            toggleBtn.Size = UDim2.new(0, 50, 0, 24)
+            toggleBtn.Position = UDim2.new(1, -60, 0.5, -12)
+            toggleBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+            toggleBtn.Text = ""
+            toggleBtn.BorderSizePixel = 0
+            toggleBtn.AutoButtonColor = false
+            toggleBtn.Parent = toggleFrame
+
+            local corner = Instance.new("UICorner", toggleBtn)
+            corner.CornerRadius = UDim.new(0, 12)
+
+            local knob = Instance.new("Frame")
+            knob.Size = UDim2.new(0, 20, 0, 20)
+            knob.Position = UDim2.new(0, 2, 0.5, -10)
+            knob.BackgroundColor3 = Color3.fromRGB(180, 180, 180)
+            knob.BorderSizePixel = 0
+            knob.Parent = toggleBtn
+
+            local knobCorner = Instance.new("UICorner", knob)
+            knobCorner.CornerRadius = UDim.new(1, 0)
+
+            local state = false
+            local function updateToggle(animated)
+                if state then
+                    TweenService:Create(toggleBtn, TweenInfo.new(animated and 0.16 or 0), {BackgroundColor3 = Color3.fromRGB(38, 101, 212)}):Play()
+                    TweenService:Create(knob, TweenInfo.new(animated and 0.16 or 0), {Position = UDim2.new(1, -22, 0.5, -10), BackgroundColor3 = Color3.fromRGB(255, 255, 255)}):Play()
+                else
+                    TweenService:Create(toggleBtn, TweenInfo.new(animated and 0.16 or 0), {BackgroundColor3 = Color3.fromRGB(60, 60, 60)}):Play()
+                    TweenService:Create(knob, TweenInfo.new(animated and 0.16 or 0), {Position = UDim2.new(0, 2, 0.5, -10), BackgroundColor3 = Color3.fromRGB(180, 180, 180)}):Play()
+                end
+            end
+
+            toggleBtn.MouseButton1Click:Connect(function()
+                state = not state
+                updateToggle(true)
+                if callback then callback(state) end
+            end)
+
+            updateToggle(false)
+        end
+
+        -- === TEXTBOX ===
+        function tab:CreateTextbox(labelText, callback)
+            local boxFrame = Instance.new("Frame")
+            boxFrame.Size = UDim2.new(1, -20, 0, 40)
+            boxFrame.BackgroundTransparency = 1
+            boxFrame.Parent = tabContent
+
+            local label = Instance.new("TextLabel")
+            label.Size = UDim2.new(0.4, 0, 1, 0)
+            label.BackgroundTransparency = 1
+            label.Text = labelText .. ":"
+            label.TextColor3 = Color3.fromRGB(230, 230, 230)
+            label.TextSize = 18
+            label.Font = Enum.Font.SourceSans
+            label.TextXAlignment = Enum.TextXAlignment.Left
+            label.Parent = boxFrame
+
+            local textbox = Instance.new("TextBox")
+            textbox.Size = UDim2.new(0.55, 0, 1, -6)
+            textbox.Position = UDim2.new(0.42, 0, 0, 3)
+            textbox.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+            textbox.Text = ""
+            textbox.PlaceholderText = "Enter text..."
+            textbox.TextColor3 = Color3.fromRGB(255, 255, 255)
+            textbox.Font = Enum.Font.SourceSans
+            textbox.TextSize = 18
+            textbox.ClearTextOnFocus = false
+            textbox.Parent = boxFrame
+
+            local corner = Instance.new("UICorner", textbox)
+            corner.CornerRadius = UDim.new(0, 6)
+
+            textbox.FocusLost:Connect(function(enterPressed)
+                if enterPressed and callback then
+                    callback(textbox.Text)
+                end
+            end)
+        end
+
+        -- === Switch Tabs ===
+        table.insert(window._Tabs, tab)
+        table.insert(window._TabButtons, tabButton)
+
+        tabButton.MouseButton1Click:Connect(function()
+            for i, t in ipairs(window._Tabs) do
+                t._Content.Visible = (t == tab)
+                window._TabButtons[i].BackgroundColor3 = t == tab and Color3.fromRGB(20, 20, 30) or Color3.fromRGB(40, 40, 50)
+            end
+        end)
+
+        return tab
+    end
+
+    return window
+end
+
+return UILibrary
