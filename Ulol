@@ -12,11 +12,11 @@ function UILibrary:CreateWindow(titleText)
     gui.ResetOnSpawn = false
     gui.Parent = LocalPlayer.PlayerGui
 
-    -- ===== MAIN WINDOW =====
+    -- ===== MAIN WINDOW ===== (Rayfield-like size)
     local mainFrame = Instance.new("Frame")
     mainFrame.Name = "MainFrame"
-    mainFrame.Size = UDim2.new(0, 600, 0, 400)
-    mainFrame.Position = UDim2.new(0.5, -300, 0.5, -200)
+    mainFrame.Size = UDim2.new(0, 475, 0, 330) -- Rayfield: 475x330
+    mainFrame.Position = UDim2.new(0.5, -237, 0.5, -165)
     mainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
     mainFrame.BorderSizePixel = 0
     mainFrame.Active = true
@@ -26,13 +26,13 @@ function UILibrary:CreateWindow(titleText)
     -- ===== SIDEBAR =====
     local sidebar = Instance.new("Frame")
     sidebar.Name = "Sidebar"
-    sidebar.Size = UDim2.new(0, 150, 1, 0)
+    sidebar.Size = UDim2.new(0, 120, 1, 0) -- Rayfield sidebar: 120px width
     sidebar.BackgroundColor3 = Color3.fromRGB(28, 28, 35)
     sidebar.BorderSizePixel = 0
     sidebar.Parent = mainFrame
 
     local title = Instance.new("TextLabel")
-    title.Size = UDim2.new(1, 0, 0, 50)
+    title.Size = UDim2.new(1, 0, 0, 46)
     title.Text = titleText or "New Window"
     title.TextColor3 = Color3.fromRGB(255, 255, 255)
     title.TextSize = 20
@@ -48,8 +48,8 @@ function UILibrary:CreateWindow(titleText)
     -- ===== CONTENT AREA =====
     local contentFrame = Instance.new("Frame")
     contentFrame.Name = "ContentHolder"
-    contentFrame.Size = UDim2.new(1, -150, 1, 0)
-    contentFrame.Position = UDim2.new(0, 150, 0, 0)
+    contentFrame.Size = UDim2.new(1, -120, 1, 0)
+    contentFrame.Position = UDim2.new(0, 120, 0, 0)
     contentFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
     contentFrame.BorderSizePixel = 0
     contentFrame.Parent = mainFrame
@@ -58,9 +58,9 @@ function UILibrary:CreateWindow(titleText)
     local toggleBtn = Instance.new("ImageButton")
     toggleBtn.Name = "ToggleButton"
     toggleBtn.Size = UDim2.new(0, 40, 0, 40)
-    toggleBtn.Position = UDim2.new(0, -50, 0.5, -20) -- left of window
+    toggleBtn.Position = UDim2.new(0, -50, 0.5, -20)
     toggleBtn.BackgroundTransparency = 1
-    toggleBtn.Image = "rbxassetid://6031094678" -- you can replace with your image asset
+    toggleBtn.Image = "rbxassetid://6031094678"
     toggleBtn.Active = true
     toggleBtn.Draggable = true
     toggleBtn.Parent = mainFrame
@@ -203,6 +203,110 @@ function UILibrary:CreateWindow(titleText)
             textbox.FocusLost:Connect(function(enterPressed)
                 if enterPressed and callback then
                     callback(textbox.Text)
+                end
+            end)
+        end
+
+        -- === DROPDOWN ===
+        function tab:CreateDropdown(labelText, items, callback)
+            local dropFrame = Instance.new("Frame")
+            dropFrame.Size = UDim2.new(1, -20, 0, 40)
+            dropFrame.BackgroundTransparency = 1
+            dropFrame.Parent = tabContent
+
+            local label = Instance.new("TextLabel")
+            label.Size = UDim2.new(0.4, 0, 1, 0)
+            label.BackgroundTransparency = 1
+            label.Text = labelText .. ":"
+            label.TextColor3 = Color3.fromRGB(230, 230, 230)
+            label.TextSize = 18
+            label.Font = Enum.Font.SourceSans
+            label.TextXAlignment = Enum.TextXAlignment.Left
+            label.Parent = dropFrame
+
+            local dropdownBtn = Instance.new("TextButton")
+            dropdownBtn.Size = UDim2.new(0.55, 0, 1, -6)
+            dropdownBtn.Position = UDim2.new(0.42, 0, 0, 3)
+            dropdownBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+            dropdownBtn.Text = "Select..."
+            dropdownBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+            dropdownBtn.TextSize = 18
+            dropdownBtn.Font = Enum.Font.SourceSans
+            dropdownBtn.AutoButtonColor = false
+            dropdownBtn.Parent = dropFrame
+
+            local corner = Instance.new("UICorner", dropdownBtn)
+            corner.CornerRadius = UDim.new(0, 6)
+
+            -- Dropdown menu
+            local menu = Instance.new("Frame")
+            menu.Size = UDim2.new(1, 0, 0, #items * 30)
+            menu.Position = UDim2.new(0, 0, 1, 2)
+            menu.BackgroundColor3 = Color3.fromRGB(32, 32, 38)
+            menu.BorderSizePixel = 0
+            menu.Visible = false
+            menu.ClipsDescendants = true
+            menu.Parent = dropdownBtn
+
+            local menuCorner = Instance.new("UICorner", menu)
+            menuCorner.CornerRadius = UDim.new(0, 6)
+
+            for i, v in ipairs(items) do
+                local option = Instance.new("TextButton")
+                option.Size = UDim2.new(1, 0, 0, 30)
+                option.Position = UDim2.new(0, 0, 0, (i - 1) * 30)
+                option.BackgroundColor3 = Color3.fromRGB(44, 44, 54)
+                option.Text = tostring(v)
+                option.TextColor3 = Color3.fromRGB(255, 255, 255)
+                option.TextSize = 16
+                option.Font = Enum.Font.SourceSans
+                option.BorderSizePixel = 0
+                option.Parent = menu
+
+                option.MouseButton1Click:Connect(function()
+                    dropdownBtn.Text = tostring(v)
+                    menu.Visible = false
+                    if callback then
+                        callback(v)
+                    end
+                end)
+            end
+
+            dropdownBtn.MouseButton1Click:Connect(function()
+                menu.Visible = not menu.Visible
+            end)
+
+            -- Hide dropdown if clicked outside
+            dropdownBtn.FocusLost:Connect(function()
+                menu.Visible = false
+            end)
+        end
+
+        -- === BUTTON ===
+        function tab:CreateButton(labelText, callback)
+            local btnFrame = Instance.new("Frame")
+            btnFrame.Size = UDim2.new(1, -20, 0, 36)
+            btnFrame.BackgroundTransparency = 1
+            btnFrame.Parent = tabContent
+
+            local button = Instance.new("TextButton")
+            button.Size = UDim2.new(0.95, 0, 1, 0)
+            button.Position = UDim2.new(0.025, 0, 0, 0)
+            button.BackgroundColor3 = Color3.fromRGB(38, 101, 212)
+            button.Text = labelText
+            button.TextColor3 = Color3.fromRGB(255, 255, 255)
+            button.TextSize = 18
+            button.Font = Enum.Font.SourceSansBold
+            button.AutoButtonColor = true
+            button.BorderSizePixel = 0
+            button.Parent = btnFrame
+
+            local corner = Instance.new("UICorner", button)
+            corner.CornerRadius = UDim.new(0, 8)
+
+            button.MouseButton1Click:Connect(function()
+                if callback then
+                    callback()
                 end
             end)
         end
