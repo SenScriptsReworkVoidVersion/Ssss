@@ -182,65 +182,92 @@ function OxyLibrary:Create()
 
         local shiver = {}
 
-        function shiver:CreateButton(name, info, callback)
-            name = name or "TextButton"
-            info = info or "Info"
-            callback = callback or function() end
-    
-            local buttonFrame = Instance.new("Frame")
-            local frameLine = Instance.new("Frame")
-            local buttonInfo = Instance.new("TextLabel")
-            local btnCorner = Instance.new("UICorner")
-            local TextButton = Instance.new("TextButton")
-    
-            buttonFrame.Name = name.." ButtonFrame"
-            buttonFrame.Parent = CurrentTabFrame
-            buttonFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
-            buttonFrame.BorderColor3 = Color3.fromRGB(43, 43, 43)
-            buttonFrame.BorderSizePixel = 0
-            buttonFrame.Position = UDim2.new(0.0112781953, 0, 0.0141898664, 0)
-            buttonFrame.Size = UDim2.new(0, 519, 0, 49)
-    
-            frameLine.Name = "frameLine"
-            frameLine.Parent = buttonFrame
-            frameLine.BackgroundColor3 = Color3.fromRGB(43, 43, 43)
-            frameLine.BorderSizePixel = 0
-            frameLine.Position = UDim2.new(0, 0, 0.979591846, 0)
-            frameLine.Size = UDim2.new(1, 0, 0, 1)
-    
-            buttonInfo.Name = "buttonInfo"
-            buttonInfo.Parent = buttonFrame
-            buttonInfo.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-            buttonInfo.BackgroundTransparency = 1.000
-            buttonInfo.Position = UDim2.new(0.0115606934, 0, -0.0204081628, 0)
-            buttonInfo.Size = UDim2.new(0, 330, 0, 50)
-            buttonInfo.Font = Enum.Font.GothamSemibold
-            buttonInfo.Text = info
-            buttonInfo.TextColor3 = Color3.fromRGB(255, 255, 255)
-            buttonInfo.TextSize = 16.000
-            buttonInfo.TextXAlignment = Enum.TextXAlignment.Left
-    
-            TextButton.Parent = buttonFrame
-            TextButton.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
-            TextButton.Position = UDim2.new(0.707129002, 0, 0.142857149, 0)
-            TextButton.Size = UDim2.new(0, 152, 0, 34)
-            TextButton.Font = Enum.Font.GothamSemibold
-            TextButton.Text = name
-            TextButton.TextColor3 = Color3.fromRGB(149, 149, 149)
-            TextButton.TextSize = 14.000
-    
-            btnCorner.CornerRadius = UDim.new(0, 3)
-            btnCorner.Name = "btnCorner"
-            btnCorner.Parent = TextButton
-    
-            TextButton.MouseButton1Click:Connect(function()
-                callback()
-            end)
-        end
         function shiver:CreateToggle(name, callback)
-            name = name or "Toggle"
-            info = info or "Info"
-            callback = callback or function() end
+    name = name or "Toggle"
+    callback = callback or function() end
+
+    local toggleFrame = Instance.new("Frame")
+    local frameLine = Instance.new("Frame")
+    local toggleInfo = Instance.new("TextLabel")
+    local toggleContainer = Instance.new("Frame")
+    local toggleBGCorner = Instance.new("UICorner")
+    local toggleKnob = Instance.new("Frame")
+    local knobCorner = Instance.new("UICorner")
+    local knobShadow = Instance.new("UIStroke")
+
+    toggleFrame.Name = "toggleFrame"
+    toggleFrame.Parent = CurrentTabFrame
+    toggleFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
+    toggleFrame.BorderColor3 = Color3.fromRGB(43, 43, 43)
+    toggleFrame.BorderSizePixel = 0
+    toggleFrame.Position = UDim2.new(0.011, 0, 0.014, 0)
+    toggleFrame.Size = UDim2.new(0, 519, 0, 49)
+
+    frameLine.Name = "frameLine"
+    frameLine.Parent = toggleFrame
+    frameLine.BackgroundColor3 = Color3.fromRGB(43, 43, 43)
+    frameLine.BorderSizePixel = 0
+    frameLine.Position = UDim2.new(0, 0, 0.979591846, 0)
+    frameLine.Size = UDim2.new(1, 0, 0, 1)
+
+    toggleInfo.Name = "toggleInfo"
+    toggleInfo.Parent = toggleFrame
+    toggleInfo.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    toggleInfo.BackgroundTransparency = 1.000
+    toggleInfo.Position = UDim2.new(0.0115606934, 0, -0.0204081628, 0)
+    toggleInfo.Size = UDim2.new(0, 330, 0, 50)
+    toggleInfo.Font = Enum.Font.GothamSemibold
+    toggleInfo.Text = name
+    toggleInfo.TextColor3 = Color3.fromRGB(255, 255, 255)
+    toggleInfo.TextSize = 16.000
+    toggleInfo.TextXAlignment = Enum.TextXAlignment.Left
+
+    -- Rayfield-style Toggle Container (pill)
+    toggleContainer.Name = "toggleContainer"
+    toggleContainer.Parent = toggleFrame
+    toggleContainer.BackgroundColor3 = Color3.fromRGB(48, 48, 48) -- Off color
+    toggleContainer.Position = UDim2.new(0.880, 0, 0.185, 0)
+    toggleContainer.Size = UDim2.new(0, 62, 0, 28)
+    toggleContainer.BorderSizePixel = 0
+
+    toggleBGCorner.CornerRadius = UDim.new(0.5, 0)
+    toggleBGCorner.Parent = toggleContainer
+
+    -- Knob
+    toggleKnob.Name = "toggleKnob"
+    toggleKnob.Parent = toggleContainer
+    toggleKnob.BackgroundColor3 = Color3.fromRGB(245, 245, 245)
+    toggleKnob.Position = UDim2.new(0, 2, 0.08, 0)
+    toggleKnob.Size = UDim2.new(0, 24, 0, 24)
+    toggleKnob.BorderSizePixel = 0
+
+    knobCorner.CornerRadius = UDim.new(1, 0)
+    knobCorner.Parent = toggleKnob
+
+    -- Optional: subtle border/shadow for knob
+    knobShadow.Color = Color3.fromRGB(200, 200, 200)
+    knobShadow.Thickness = 1
+    knobShadow.Parent = toggleKnob
+
+    local tog = false
+
+    -- Click handling
+    toggleContainer.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            tog = not tog
+            callback(tog)
+            if tog then
+                -- ON: Move knob right, change BG color
+                toggleContainer.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
+                toggleKnob:TweenPosition(UDim2.new(1, -26, 0.08, 0), "Out", "Quad", 0.18, true)
+            else
+                -- OFF: Move knob left, change BG color
+                toggleContainer.BackgroundColor3 = Color3.fromRGB(48, 48, 48)
+                toggleKnob:TweenPosition(UDim2.new(0, 2, 0.08, 0), "Out", "Quad", 0.18, true)
+            end
+        end
+    end)
+end
 
             local toggleFrame = Instance.new("Frame")
             local frameLine = Instance.new("Frame")
