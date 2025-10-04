@@ -389,7 +389,7 @@ function Library:CreateWindow(guiName, subtitle, version)
             return toggleSwitch
         end
 
-        -- Slightly Bigger Slider
+        -- Slightly Bigger Slider (Improved Mobile Support)
         function Tab:CreateSlider(name, min, max, default, callback)
             if type(default) == "function" and callback == nil then
                 callback = default
@@ -475,6 +475,14 @@ function Library:CreateWindow(guiName, subtitle, version)
             UserInputService.InputChanged:Connect(function(input)
                 if draggingSlider and (input.UserInputType==Enum.UserInputType.MouseMovement or input.UserInputType==Enum.UserInputType.Touch) then
                     updateSlider(input.Position.X)
+                end
+            end)
+            sliderFrame.TouchTap:Connect(function(touchPositions)
+                if touchPositions and #touchPositions > 0 then
+                    updateSlider(touchPositions[1].X, true)
+                else
+                    local input = UserInputService:GetMouseLocation()
+                    updateSlider(input.X, true)
                 end
             end)
 
@@ -572,7 +580,7 @@ function Library:CreateWindow(guiName, subtitle, version)
             return dropdownFrame
         end
 
-        -- Slightly Bigger Textbox
+        -- Slightly Bigger Textbox (Improved Mobile Support)
         function Tab:CreateTextbox(name, placeholder, callback)
             callback = callback or function() end
             placeholder = placeholder or ""
@@ -587,16 +595,21 @@ function Library:CreateWindow(guiName, subtitle, version)
             tb.TextColor3 = Color3.fromRGB(255,255,255)
             createUICorner(tb, UDim.new(0,8))
 
-            tb.Focused:Connect(function()
-            end)
-            tb.FocusLost:Connect(function(enterPressed)
-                if enterPressed then
-                    pcall(callback, tb.Text)
-                    if globalCallback then pcall(globalCallback, "Textbox", name, tb.Text) end
-                end
+            tb.TouchTap:Connect(function()
+                tb:CaptureFocus()
             end)
             tb.InputBegan:Connect(function(input)
                 if input.UserInputType == Enum.UserInputType.Touch then
+                    tb:CaptureFocus()
+                end
+            end)
+            tb.Focused:Connect(function()
+            end)
+            tb.FocusLost:Connect(function(enterPressed)
+                -- On mobile, enterPressed is true when "Return"/"Done" is pressed
+                if enterPressed or UserInputService.TouchEnabled then
+                    pcall(callback, tb.Text)
+                    if globalCallback then pcall(globalCallback, "Textbox", name, tb.Text) end
                 end
             end)
             createRow(tabFrame, name..":", tb)
