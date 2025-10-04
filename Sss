@@ -1,4 +1,5 @@
--- DarkMirror UI Library (Slightly Bigger Elements, Tab Switch Fix, Full Mobile/Desktop Support)
+-- ===[ DARK MIRROR UI LIBRARY, FULL MOBILE SUPPORT ]===
+
 local Library = {}
 Library.__index = Library
 
@@ -13,8 +14,8 @@ local UserInputService = game:GetService("UserInputService")
 local LocalPlayer = Players.LocalPlayer
 local playerGui = LocalPlayer:WaitForChild("PlayerGui")
 
-local defaultShowIcon = "https://www.roblox.com/Thumbs/Asset.ashx?width=420&height=420&assetId=94371101129415"
-local defaultHideIcon = "https://www.roblox.com/Thumbs/Asset.ashx?width=420&height=420&assetId=94371101129415"
+local defaultShowIcon = "rbxassetid://94371101129415"
+local defaultHideIcon = "rbxassetid://94371101129415"
 
 local baseScreenGui = Instance.new("ScreenGui")
 baseScreenGui.Name = "DarkMirrorClassicUILib"
@@ -76,14 +77,6 @@ local function createUICorner(instance, radius)
     return c
 end
 
-local function createUIStroke(instance, color, thickness)
-    local s = Instance.new("UIStroke")
-    s.Color = color or Color3.fromRGB(255, 0, 0)
-    s.Thickness = thickness or 2
-    s.Parent = instance
-    return s
-end
-
 function Library:CreateWindow(guiName, subtitle, version)
     local Window = {}
     Window.__index = Window
@@ -102,7 +95,6 @@ function Library:CreateWindow(guiName, subtitle, version)
     titleBar.Size = UDim2.new(1, 0, 0, 46)
     titleBar.Position = UDim2.new(0, 0, 0, 0)
     titleBar.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-    titleBar.BackgroundTransparency = 0
     titleBar.Parent = mainFrame
     titleBar.Name = "TitleBar"
     createUICorner(titleBar, UDim.new(0,8))
@@ -261,7 +253,6 @@ function Library:CreateWindow(guiName, subtitle, version)
         btn.Parent = sidebar
         btn.ZIndex = 4
 
-        -- TAB SWITCH FIX: Only activate tab on click/tap, not scroll/drag.
         btn.MouseButton1Click:Connect(function()
             for _, f in pairs(tabFrames) do f.Visible = false end
             tabFrame.Visible = true
@@ -329,7 +320,6 @@ function Library:CreateWindow(guiName, subtitle, version)
             return sectionRow
         end
 
-        -- Toggle (supports mobile)
         function Tab:CreateToggle(name, callback)
             callback = callback or function() end
             local toggleSwitch = Instance.new("TextButton")
@@ -389,7 +379,6 @@ function Library:CreateWindow(guiName, subtitle, version)
             return toggleSwitch
         end
 
-        -- Slider (supports tap+drag mobile, instant tap, proper Touch handling)
         function Tab:CreateSlider(name, min, max, default, callback)
             if type(default) == "function" and callback == nil then
                 callback = default
@@ -467,7 +456,6 @@ function Library:CreateWindow(guiName, subtitle, version)
                 draggingSlider = false
             end
 
-            -- Drag and tap for thumb
             sliderThumb.InputBegan:Connect(function(input)
                 if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
                     onSliderPress(input)
@@ -478,7 +466,6 @@ function Library:CreateWindow(guiName, subtitle, version)
                     stopSliderDrag()
                 end
             end)
-            -- Tap anywhere on the bar
             sliderBar.InputBegan:Connect(function(input)
                 if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
                     onSliderPress(input)
@@ -489,7 +476,6 @@ function Library:CreateWindow(guiName, subtitle, version)
                     stopSliderDrag()
                 end
             end)
-            -- Full sliderFrame tap for easy access
             sliderFrame.InputBegan:Connect(function(input)
                 if input.UserInputType == Enum.UserInputType.Touch then
                     onSliderPress(input)
@@ -500,13 +486,11 @@ function Library:CreateWindow(guiName, subtitle, version)
                     stopSliderDrag()
                 end
             end)
-            -- Move slider on drag
             UserInputService.InputChanged:Connect(function(input)
                 if draggingSlider and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
                     updateSliderFromInput(input, false)
                 end
             end)
-            -- Tap support for sliderFrame & sliderBar
             sliderFrame.TouchTap:Connect(function(touchPositions)
                 if touchPositions and #touchPositions > 0 then
                     setByPercent(percentFromX(touchPositions[1].X), true)
@@ -518,7 +502,6 @@ function Library:CreateWindow(guiName, subtitle, version)
                 end
             end)
 
-            -- Responsive on resize
             sliderFrame:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()
                 local rel = 0
                 if max ~= min then rel = (default - min) / (max - min) end
@@ -530,7 +513,6 @@ function Library:CreateWindow(guiName, subtitle, version)
             return sliderFrame
         end
 
-        -- Dropdown (supports mobile)
         function Tab:CreateDropdown(name, options, callback)
             options = options or {}
             callback = callback or function() end
@@ -563,7 +545,6 @@ function Library:CreateWindow(guiName, subtitle, version)
             dropdownListFrame.Visible = false
             dropdownListFrame.Parent = dropdownFrame
             dropdownListFrame.ZIndex = 10
-            createUIStroke(dropdownListFrame, Color3.fromRGB(255,0,0),1)
 
             local listLayout = Instance.new("UIListLayout", dropdownListFrame)
             listLayout.SortOrder = Enum.SortOrder.LayoutOrder
@@ -615,7 +596,6 @@ function Library:CreateWindow(guiName, subtitle, version)
             return dropdownFrame
         end
 
-        -- Textbox (proper mobile focus/submit)
         function Tab:CreateTextbox(name, placeholder, callback)
             callback = callback or function() end
             placeholder = placeholder or ""
@@ -648,7 +628,6 @@ function Library:CreateWindow(guiName, subtitle, version)
             return tb
         end
 
-        -- Button (mobile compatible)
         function Tab:CreateButton(name, callback)
             callback = callback or function() end
             local btn = Instance.new("TextButton")
@@ -682,4 +661,29 @@ function Library:CreateWindow(guiName, subtitle, version)
     return Window
 end
 
-return Library
+-- ===[ EXAMPLE USAGE ]===
+
+local win = Library:CreateWindow("Mobile Demo", "All elements mobile!", "v1.0")
+local tab = win:CreateTab("Main")
+
+tab:CreateSection("Try all elements on mobile!")
+
+tab:CreateTextbox("Say", "Type here...", function(txt)
+    print("Textbox value:", txt)
+end)
+
+tab:CreateSlider("Volume", 0, 100, 50, function(val)
+    print("Slider value:", val)
+end)
+
+tab:CreateToggle("Enable Feature", function(state)
+    print("Toggle is now:", state)
+end)
+
+tab:CreateDropdown("Choose", {"Apple", "Banana", "Cherry"}, function(opt)
+    print("Dropdown chose:", opt)
+end)
+
+tab:CreateButton("Click Me!", function()
+    print("Button pressed!")
+end)
