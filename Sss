@@ -1,4 +1,4 @@
--- DarkMirror UI Library (Slightly Bigger Elements, Tab Switch Fix, Mobile/Desktop Support)
+-- DarkMirror UI Library (Slightly Bigger Elements, Tab Switch Fix, Full Mobile/Desktop Support)
 local Library = {}
 Library.__index = Library
 
@@ -20,6 +20,7 @@ local baseScreenGui = Instance.new("ScreenGui")
 baseScreenGui.Name = "DarkMirrorClassicUILib"
 baseScreenGui.Parent = playerGui
 baseScreenGui.ResetOnSpawn = false
+baseScreenGui.IgnoreGuiInset = true
 
 local showHideBtn = Instance.new("ImageButton")
 showHideBtn.Size = UDim2.new(0, 60, 0, 60)
@@ -34,7 +35,7 @@ local showHideBtnStroke = Instance.new("UIStroke", showHideBtn)
 showHideBtnStroke.Color = Color3.fromRGB(255, 0, 0)
 showHideBtnStroke.Thickness = 2
 
--- Drag logic for show/hide button
+-- Drag logic for show/hide button (mouse and touch)
 do
     local dragging, dragInput, dragStart, startPos
     local function updateDrag(input)
@@ -184,7 +185,7 @@ function Library:CreateWindow(guiName, subtitle, version)
     sidebar.Size = UDim2.new(0, 154, 1, -46)
     sidebar.Position = UDim2.new(0, 0, 0, 46)
     sidebar.CanvasSize = UDim2.new(0,0,0,0)
-    sidebar.ScrollBarThickness = 4
+    sidebar.ScrollBarThickness = 8
     sidebar.BackgroundColor3 = Color3.fromRGB(24, 24, 24)
     sidebar.BackgroundTransparency = 0.3
     sidebar.Parent = mainFrame
@@ -233,7 +234,7 @@ function Library:CreateWindow(guiName, subtitle, version)
         tabFrame.Size = UDim2.new(1, 0, 1, 0)
         tabFrame.BackgroundTransparency = 1
         tabFrame.Visible = false
-        tabFrame.ScrollBarThickness = 6
+        tabFrame.ScrollBarThickness = 8
         tabFrame.CanvasSize = UDim2.new(0,0,0,0)
         tabFrame.Parent = content
         tabFrame.Name = name
@@ -243,7 +244,7 @@ function Library:CreateWindow(guiName, subtitle, version)
 
         local layout = Instance.new("UIListLayout", tabFrame)
         layout.FillDirection = Enum.FillDirection.Vertical
-        layout.Padding = UDim.new(0, 6) -- little more space for bigger elements
+        layout.Padding = UDim.new(0, 6)
         layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
         layout.VerticalAlignment = Enum.VerticalAlignment.Top
 
@@ -273,7 +274,6 @@ function Library:CreateWindow(guiName, subtitle, version)
             for _, b in pairs(sidebarButtons) do b.BackgroundColor3 = Color3.fromRGB(30, 30, 30) end
             btn.BackgroundColor3 = Color3.fromRGB(60, 0, 0)
         end)
-        -- Remove InputBegan for tab switching, prevents accidental tab switch on drag/scroll
 
         table.insert(sidebarButtons, btn)
         if #sidebarButtons == 1 then
@@ -329,7 +329,7 @@ function Library:CreateWindow(guiName, subtitle, version)
             return sectionRow
         end
 
-        -- Slightly Bigger Toggle
+        -- Toggle (supports mobile)
         function Tab:CreateToggle(name, callback)
             callback = callback or function() end
             local toggleSwitch = Instance.new("TextButton")
@@ -389,7 +389,7 @@ function Library:CreateWindow(guiName, subtitle, version)
             return toggleSwitch
         end
 
-        -- Slightly Bigger Slider (Improved Mobile Support)
+        -- Slider (supports tap+drag mobile, instant tap, proper Touch handling)
         function Tab:CreateSlider(name, min, max, default, callback)
             if type(default) == "function" and callback == nil then
                 callback = default
@@ -404,13 +404,23 @@ function Library:CreateWindow(guiName, subtitle, version)
             sliderFrame.Size = UDim2.new(0, 160, 0, 22)
             sliderFrame.BackgroundColor3 = Color3.fromRGB(80,0,0)
             createUICorner(sliderFrame, UDim.new(1,0))
+            sliderFrame.ClipsDescendants = true
+
+            local sliderBar = Instance.new("Frame")
+            sliderBar.Size = UDim2.new(1, 0, 1, -10)
+            sliderBar.Position = UDim2.new(0, 0, 0, 5)
+            sliderBar.BackgroundColor3 = Color3.fromRGB(100,0,0)
+            sliderBar.BorderSizePixel = 0
+            sliderBar.Parent = sliderFrame
+            createUICorner(sliderBar, UDim.new(1,0))
 
             local sliderThumb = Instance.new("Frame")
-            sliderThumb.Size = UDim2.new(0,14,0,18)
-            sliderThumb.Position = UDim2.new(0,0,0,2)
+            sliderThumb.Size = UDim2.new(0,18,0,18)
+            sliderThumb.Position = UDim2.new(0,0,0.5,-9)
             sliderThumb.BackgroundColor3 = Color3.fromRGB(255,255,255)
             sliderThumb.Parent = sliderFrame
             createUICorner(sliderThumb, UDim.new(1,0))
+            sliderThumb.ZIndex = 2
 
             local sliderValueLabel = Instance.new("TextLabel")
             sliderValueLabel.Size = UDim2.new(0,36,1,0)
@@ -424,27 +434,32 @@ function Library:CreateWindow(guiName, subtitle, version)
 
             local sliderValue = default
             local draggingSlider = false
-            local function updateSlider(inputX, instantly)
-                local absPosX = sliderFrame.AbsolutePosition.X
-                local absSizeX = sliderFrame.AbsoluteSize.X
-                local relativeX = 0
-                if absSizeX > 0 then
-                    relativeX = math.clamp((inputX - absPosX)/absSizeX, 0, 1)
-                end
+
+            local function setByPercent(percent, instantly)
+                percent = math.clamp(percent, 0, 1)
                 if instantly then
-                    sliderThumb.Position = UDim2.new(relativeX, -7, 0, 2)
+                    sliderThumb.Position = UDim2.new(percent, -9, 0.5, -9)
                 else
-                    TweenService:Create(sliderThumb,TweenInfo.new(0.14),{Position=UDim2.new(relativeX, -7, 0, 2)}):Play()
+                    TweenService:Create(sliderThumb, TweenInfo.new(0.14), {Position = UDim2.new(percent, -9, 0.5, -9)}):Play()
                 end
-                sliderValue = math.floor(min + (max - min) * relativeX)
+                sliderValue = math.floor(min + (max - min) * percent + 0.5)
                 sliderValueLabel.Text = tostring(sliderValue)
                 pcall(callback, sliderValue)
                 if globalCallback then pcall(globalCallback, "Slider", name, sliderValue) end
             end
 
+            local function percentFromX(x)
+                local absPos = sliderBar.AbsolutePosition.X
+                local absSize = sliderBar.AbsoluteSize.X
+                return absSize > 0 and math.clamp((x - absPos) / absSize, 0, 1) or 0
+            end
+
+            local function updateSliderFromInput(input, instantly)
+                setByPercent(percentFromX(input.Position.X), instantly)
+            end
+
             local function onSliderPress(input)
-                local pos = input and input.Position or UserInputService:GetMouseLocation()
-                updateSlider(pos.X)
+                updateSliderFromInput(input, true)
                 draggingSlider = true
             end
 
@@ -452,52 +467,70 @@ function Library:CreateWindow(guiName, subtitle, version)
                 draggingSlider = false
             end
 
+            -- Drag and tap for thumb
             sliderThumb.InputBegan:Connect(function(input)
-                if input.UserInputType==Enum.UserInputType.MouseButton1 or input.UserInputType==Enum.UserInputType.Touch then
+                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
                     onSliderPress(input)
                 end
             end)
             sliderThumb.InputEnded:Connect(function(input)
-                if input.UserInputType==Enum.UserInputType.MouseButton1 or input.UserInputType==Enum.UserInputType.Touch then
+                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
                     stopSliderDrag()
                 end
             end)
+            -- Tap anywhere on the bar
+            sliderBar.InputBegan:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                    onSliderPress(input)
+                end
+            end)
+            sliderBar.InputEnded:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                    stopSliderDrag()
+                end
+            end)
+            -- Full sliderFrame tap for easy access
             sliderFrame.InputBegan:Connect(function(input)
-                if input.UserInputType==Enum.UserInputType.MouseButton1 or input.UserInputType==Enum.UserInputType.Touch then
+                if input.UserInputType == Enum.UserInputType.Touch then
                     onSliderPress(input)
                 end
             end)
             sliderFrame.InputEnded:Connect(function(input)
-                if input.UserInputType==Enum.UserInputType.MouseButton1 or input.UserInputType==Enum.UserInputType.Touch then
+                if input.UserInputType == Enum.UserInputType.Touch then
                     stopSliderDrag()
                 end
             end)
+            -- Move slider on drag
             UserInputService.InputChanged:Connect(function(input)
-                if draggingSlider and (input.UserInputType==Enum.UserInputType.MouseMovement or input.UserInputType==Enum.UserInputType.Touch) then
-                    updateSlider(input.Position.X)
+                if draggingSlider and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+                    updateSliderFromInput(input, false)
                 end
             end)
+            -- Tap support for sliderFrame & sliderBar
             sliderFrame.TouchTap:Connect(function(touchPositions)
                 if touchPositions and #touchPositions > 0 then
-                    updateSlider(touchPositions[1].X, true)
-                else
-                    local input = UserInputService:GetMouseLocation()
-                    updateSlider(input.X, true)
+                    setByPercent(percentFromX(touchPositions[1].X), true)
+                end
+            end)
+            sliderBar.TouchTap:Connect(function(touchPositions)
+                if touchPositions and #touchPositions > 0 then
+                    setByPercent(percentFromX(touchPositions[1].X), true)
                 end
             end)
 
+            -- Responsive on resize
             sliderFrame:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()
                 local rel = 0
                 if max ~= min then rel = (default - min) / (max - min) end
-                sliderThumb.Position = UDim2.new(math.clamp(rel,0,1), -7, 0, 2)
+                sliderThumb.Position = UDim2.new(math.clamp(rel,0,1), -9, 0.5, -9)
                 sliderValueLabel.Text = tostring(default)
             end)
-            updateSlider(sliderFrame.AbsolutePosition.X, true)
+            setByPercent((default-min)/(max-min), true)
             createRow(tabFrame, name..":", sliderFrame)
             return sliderFrame
         end
 
-        -- Slightly Bigger Dropdown
+        -- Dropdown (supports mobile)
         function Tab:CreateDropdown(name, options, callback)
             options = options or {}
             callback = callback or function() end
@@ -521,6 +554,7 @@ function Library:CreateWindow(guiName, subtitle, version)
             dropdownBtn.BackgroundTransparency = 1
             dropdownBtn.Text = ""
             dropdownBtn.Parent = dropdownFrame
+            dropdownBtn.ZIndex = 2
 
             local dropdownListFrame = Instance.new("Frame")
             dropdownListFrame.Size = UDim2.new(1,0,0,#options*26)
@@ -528,11 +562,16 @@ function Library:CreateWindow(guiName, subtitle, version)
             dropdownListFrame.BackgroundColor3 = Color3.fromRGB(20,20,20)
             dropdownListFrame.Visible = false
             dropdownListFrame.Parent = dropdownFrame
+            dropdownListFrame.ZIndex = 10
             createUIStroke(dropdownListFrame, Color3.fromRGB(255,0,0),1)
 
             local listLayout = Instance.new("UIListLayout", dropdownListFrame)
             listLayout.SortOrder = Enum.SortOrder.LayoutOrder
             listLayout.Padding = UDim.new(0, 2)
+
+            local function hideDropdown()
+                dropdownListFrame.Visible = false
+            end
 
             for _, opt in ipairs(options) do
                 local optBtn = Instance.new("TextButton")
@@ -543,24 +582,18 @@ function Library:CreateWindow(guiName, subtitle, version)
                 optBtn.TextColor3 = Color3.fromRGB(255,255,255)
                 optBtn.TextSize = 14
                 optBtn.Parent = dropdownListFrame
-                optBtn.MouseButton1Click:Connect(function()
+                optBtn.ZIndex = 11
+                local function selectOpt()
                     dropdownLabel.Text = opt
-                    dropdownListFrame.Visible = false
+                    hideDropdown()
                     pcall(callback, opt)
                     if globalCallback then pcall(globalCallback, "Dropdown", name, opt) end
-                end)
-                optBtn.TouchTap:Connect(function()
-                    dropdownLabel.Text = opt
-                    dropdownListFrame.Visible = false
-                    pcall(callback, opt)
-                    if globalCallback then pcall(globalCallback, "Dropdown", name, opt) end
-                end)
+                end
+                optBtn.MouseButton1Click:Connect(selectOpt)
+                optBtn.TouchTap:Connect(selectOpt)
                 optBtn.InputBegan:Connect(function(input)
                     if input.UserInputType == Enum.UserInputType.Touch then
-                        dropdownLabel.Text = opt
-                        dropdownListFrame.Visible = false
-                        pcall(callback, opt)
-                        if globalCallback then pcall(globalCallback, "Dropdown", name, opt) end
+                        selectOpt()
                     end
                 end)
             end
@@ -576,11 +609,13 @@ function Library:CreateWindow(guiName, subtitle, version)
                     onDropdownPress()
                 end
             end)
+            dropdownFrame.MouseLeave:Connect(hideDropdown)
+            dropdownFrame.TouchLongPress:Connect(hideDropdown)
             createRow(tabFrame, name..":", dropdownFrame)
             return dropdownFrame
         end
 
-        -- Slightly Bigger Textbox (Improved Mobile Support)
+        -- Textbox (proper mobile focus/submit)
         function Tab:CreateTextbox(name, placeholder, callback)
             callback = callback or function() end
             placeholder = placeholder or ""
@@ -603,10 +638,7 @@ function Library:CreateWindow(guiName, subtitle, version)
                     tb:CaptureFocus()
                 end
             end)
-            tb.Focused:Connect(function()
-            end)
             tb.FocusLost:Connect(function(enterPressed)
-                -- On mobile, enterPressed is true when "Return"/"Done" is pressed
                 if enterPressed or UserInputService.TouchEnabled then
                     pcall(callback, tb.Text)
                     if globalCallback then pcall(globalCallback, "Textbox", name, tb.Text) end
@@ -616,7 +648,7 @@ function Library:CreateWindow(guiName, subtitle, version)
             return tb
         end
 
-        -- Slightly Bigger Button
+        -- Button (mobile compatible)
         function Tab:CreateButton(name, callback)
             callback = callback or function() end
             local btn = Instance.new("TextButton")
