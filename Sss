@@ -7,22 +7,36 @@ local LocalPlayer = game:GetService("Players").LocalPlayer
 local Mouse = LocalPlayer:GetMouse()
 local HttpService = game:GetService("HttpService")
 
--- Place this at the top of your script for the OrionLib.DarkMirror theme
-OrionLib = OrionLib or {}
-OrionLib.Themes = {
-    DarkMirror = {
-        Main = Color3.fromRGB(18, 18, 18),         -- Dark background for main window
-        Second = Color3.fromRGB(28, 28, 28),       -- Slightly lighter for elements
-        Stroke = Color3.fromRGB(50, 50, 50),       -- Border/lines
-        Divider = Color3.fromRGB(48, 48, 48),      -- Dividers
-        Text = Color3.fromRGB(250, 250, 250),      -- Main text color (white)
-        TextDark = Color3.fromRGB(160, 160, 160),  -- Secondary text
-        TitleBar = Color3.fromRGB(0, 0, 0)         -- PURE BLACK for title bar
-    }
+local OrionLib = {
+	Elements = {},
+	ThemeObjects = {},
+	Connections = {},
+	Flags = {},
+	Themes = {
+		Default = {
+			Main = Color3.fromRGB(25, 25, 25),
+			Second = Color3.fromRGB(32, 32, 32),
+			Stroke = Color3.fromRGB(60, 60, 60),
+			Divider = Color3.fromRGB(60, 60, 60),
+			Text = Color3.fromRGB(240, 240, 240),
+			TextDark = Color3.fromRGB(150, 150, 150)
+		},
+		DarkGlass = {
+			Main = Color3.fromRGB(15, 15, 15),  -- Base dark
+			Second = Color3.fromRGB(25, 25, 25), -- Slight contrast
+			Stroke = Color3.fromRGB(80, 80, 80), -- Glass-like border
+			Divider = Color3.fromRGB(100, 100, 100),
+			Text = Color3.fromRGB(255, 255, 255),
+			TextDark = Color3.fromRGB(180, 180, 180),
+			Transparency = 0.2, -- Glass effect (for frames / backgrounds)
+			Blur = 8           -- If you add a blur effect
+		}
+	},
+	SelectedTheme = "DarkGlass", -- change theme here
+	Folder = nil,
+	SaveCfg = false
 }
 
--- Set this after the theme table to use the DarkMirror theme
-OrionLib.SelectedTheme = "DarkMirror"
 --Feather Icons https://github.com/evoincorp/lucideblox/tree/master/src/modules/util - Created by 7kayoh
 local Icons = {}
 
